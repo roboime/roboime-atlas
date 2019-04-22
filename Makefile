@@ -1,9 +1,8 @@
-PROTOSRC=src/protos
-getdeps:
-	@go get -u github.com/golang/protobuf/protoc-gen-go
-
 setup:
-	@protoc --go_out=. proto/*.proto
+	@go get -u github.com/golang/protobuf/protoc-gen-go
+	@cd src/protos/ && ./setup.sh
+deps:
+	@dep ensure
 proto:
 	mkdir build
 	mkdir build/gen
