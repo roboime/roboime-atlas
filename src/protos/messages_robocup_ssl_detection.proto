@@ -1,6 +1,6 @@
 syntax = "proto2";
-option go_package = "messages_robocup_ssl_detection";
-//package messages_robocup_ssl_detection;
+option go_package = "ssl";
+
 message SSL_DetectionBall {
   required float  confidence = 1;
   optional uint32 area       = 2;

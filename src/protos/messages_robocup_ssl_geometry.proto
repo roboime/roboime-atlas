@@ -1,6 +1,6 @@
 syntax = "proto2";
-//package messages_robocup_ssl_geometry;
-option go_package = "messages_robocup_ssl_geometry";
+option go_package = "ssl";
+
 message SSL_GeometryFieldSize {
     required int32 line_width = 1;
     required int32 field_length = 2;
