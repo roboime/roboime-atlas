@@ -1,1 +1,1 @@
-protoc --go_out=./ssl *.proto
+protoc --go_out=plugins=grpc:ssl *.proto

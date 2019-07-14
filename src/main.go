@@ -1,13 +1,11 @@
 package main
 
-import (
-	// "fmt"
-	// "log"
-
-	// sslProto "github.com/roboime/roboime-atlas/src/protos/ssl_proto"
-
-	// "github.com/golang/protobuf/proto"
-)
+import "github.com/roboime/roboime-atlas/src/connect"
 
 func main() {
+	go connect.ListenToVision()
+
+	connect.ClientTest()
+
+	select {}
 }
