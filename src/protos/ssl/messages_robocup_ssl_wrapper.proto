@@ -1,0 +1,18 @@
+syntax = "proto3";
+import "messages_robocup_ssl_detection.proto";
+import "messages_robocup_ssl_geometry.proto";
+option go_package = "ssl";
+
+service RoboIMEAtlas{
+  rpc GetFrame(Timestamp) returns (stream SSL_WrapperPacket){}
+}
+
+message Timestamp {
+  int32 unix_timestamp = 1;
+}
+
+message SSL_WrapperPacket {
+  SSL_DetectionFrame detection = 1;
+  SSL_GeometryData geometry = 2;
+}
+
