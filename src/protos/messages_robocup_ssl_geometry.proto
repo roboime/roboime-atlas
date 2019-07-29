@@ -2,20 +2,20 @@ syntax = "proto2";
 option go_package = "ssl";
 
 message SSL_GeometryFieldSize {
-    required int32 line_width = 1;
-    required int32 field_length = 2;
-    required int32 field_width = 3;
-    required int32 boundary_width = 4;
-    required int32 referee_width = 5;
-    required int32 goal_width = 6;
-    required int32 goal_depth = 7;
-    required int32 goal_wall_width = 8;
-    required int32 center_circle_radius = 9;
-    required int32 defense_radius = 10;
-    required int32 defense_stretch = 11;
-    required int32 free_kick_from_defense_dist = 12;
-    required int32 penalty_spot_from_field_line_dist = 13;
-    required int32 penalty_line_from_spot_dist = 14;
+    optional int32 line_width = 1;
+    optional int32 field_length = 2;
+    optional int32 field_width = 3;
+    optional int32 boundary_width = 4;
+    optional int32 referee_width = 5;
+    optional int32 goal_width = 6;
+    optional int32 goal_depth = 7;
+    optional int32 goal_wall_width = 8;
+    optional int32 center_circle_radius = 9;
+    optional int32 defense_radius = 10;
+    optional int32 defense_stretch = 11;
+    optional int32 free_kick_from_defense_dist = 12;
+    optional int32 penalty_spot_from_field_line_dist = 13;
+    optional int32 penalty_line_from_spot_dist = 14;
   }
   
   message SSL_GeometryCameraCalibration {

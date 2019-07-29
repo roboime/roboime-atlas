@@ -21,14 +21,30 @@ import (
 )
 
 const (
-	crt = "../localhost.crt"
-	key = "../localhost.key"
+	crt = "../local.crt"
+	key = "../local.key"
 )
 
+var (
+	VisionAddress  *string
+	VisionPort     *int
+	ServiceAddress *string
+	ServicePort    *int
+)
+
+func init() {
+	VisionAddress = flag.String("visionaddr", "224.5.23.2", "")
+	VisionPort = flag.Int("visionport", 10020, "")
+	ServiceAddress = flag.String("serviceaddr", "127.0.0.1", "")
+	ServicePort = flag.Int("serviceport", 9090, "")
+}
+
 func ListenToVision() {
+	flag.Parse()
+
 	addr := net.UDPAddr{
-		Port: 10020,
-		IP:   net.ParseIP("224.5.23.2"),
+		Port: *VisionPort,
+		IP:   net.ParseIP(*VisionAddress),
 	}
 
 	conn, err := net.ListenUDP("udp", &addr)
@@ -36,7 +52,7 @@ func ListenToVision() {
 		panic(err)
 	}
 
-	var buf [1024]byte
+	var buf [2048]byte
 	pkt := &ssl.SSL_WrapperPacket{}
 	atlas := &roboIMEAtlas{}
 	log.Println("Server started!")
@@ -48,6 +64,7 @@ func ListenToVision() {
 		}
 
 		if err := proto.Unmarshal(buf[:size], pkt); err != nil {
+			log.Println(err)
 			continue
 		}
 
@@ -64,6 +81,9 @@ func (r *roboIMEAtlas) GetFrame(timestamp *ssl.Timestamp, stream ssl.RoboIMEAtla
 		return nil
 	}
 	log.Println("geometry", r.currentFrame.GetGeometry())
+	log.Println("blue", r.currentFrame.GetDetection().GetRobotsBlue())
+	log.Println("yellow", r.currentFrame.GetDetection().GetRobotsYellow())
+	log.Println("balls", r.currentFrame.GetDetection().GetBalls())
 	return stream.Send(r.currentFrame)
 }
 
@@ -78,11 +98,14 @@ func StartRoboIMEAtlasServer(atlas *roboIMEAtlas) {
 	}
 	h := allowCORS(http.HandlerFunc(handler))
 	httpServer := http.Server{
-		Addr:    fmt.Sprintf(":9090"),
+		Addr:    fmt.Sprintf(":%d", *ServicePort),
 		Handler: h,
+		TLSConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
 	}
 
-	logger.Infof("Starting server on port 9091 with tls")
+	logger.Infof("Starting server on port %d with tls", *ServicePort)
 
 	if err := httpServer.ListenAndServeTLS(crt, key); err != nil {
 		logger.Fatalf("failed starting http2 server: %v", err)
@@ -97,7 +120,9 @@ func ClientTest() {
 	if err != nil {
 		panic(err)
 	}
-	conn, err := grpc.Dial("https://127.0.0.1:9090", grpc.WithTransportCredentials(creds))
+
+	addr := fmt.Sprintf("%s:%d", *ServiceAddress, *ServicePort)
+	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(creds), grpc.WithTimeout(time.Minute))
 	if err != nil {
 		panic(err)
 	}
@@ -110,6 +135,7 @@ func ClientTest() {
 		time.Sleep(17 * time.Millisecond)
 		stream, err := client.GetFrame(context.Background(), &ssl.Timestamp{})
 		if err != nil {
+			log.Println(err)
 			continue
 		}
 		for {
