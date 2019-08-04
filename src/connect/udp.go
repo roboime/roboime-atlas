@@ -56,7 +56,9 @@ func ListenToVision() {
 
 	var buf [2048]byte
 	pkt := &ssl.SSL_WrapperPacket{}
-	atlas := &roboIMEAtlas{}
+	atlas := &roboIMEAtlas{
+		cameraFrame: make([]*ssl.SSL_WrapperPacket, 8),
+	}
 	log.Println("Server started!")
 	go StartRoboIMEAtlasServer(atlas)
 	for {
@@ -70,24 +72,35 @@ func ListenToVision() {
 			continue
 		}
 
-		atlas.currentFrame = pkt
+		detection := pkt.GetDetection()
+		if detection != nil {
+			atlas.cameraFrame[*detection.CameraId] = pkt
+			continue
+		}
+
+		geometry := pkt.GetGeometry()
+		if geometry != nil {
+			atlas.lastGeometry = pkt
+		}
 	}
 }
 
 type roboIMEAtlas struct {
-	currentFrame *ssl.SSL_WrapperPacket // TODO: make this a buffer
-
+	cameraFrame  []*ssl.SSL_WrapperPacket
+	lastGeometry *ssl.SSL_WrapperPacket
 }
 
 func (r *roboIMEAtlas) GetFrame(timestamp *ssl.Timestamp, stream ssl.RoboIMEAtlas_GetFrameServer) error {
-	if r.currentFrame == nil {
-		return nil
+	for _, frame := range r.cameraFrame {
+		if frame != nil {
+			err := stream.Send(frame)
+			if err != nil {
+				return err
+			}
+		}
 	}
-	log.Println("geometry", r.currentFrame.GetGeometry())
-	log.Println("blue", r.currentFrame.GetDetection().GetRobotsBlue())
-	log.Println("yellow", r.currentFrame.GetDetection().GetRobotsYellow())
-	log.Println("balls", r.currentFrame.GetDetection().GetBalls())
-	return stream.Send(r.currentFrame)
+
+	return nil
 }
 
 func StartRoboIMEAtlasServer(atlas *roboIMEAtlas) {
