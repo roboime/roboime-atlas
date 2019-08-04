@@ -1,11 +1,11 @@
 package main
 
-import "github.com/roboime/roboime-atlas/src/connect"
+import (
+	"github.com/roboime/roboime-atlas/src/connect"
+)
 
 func main() {
 	go connect.ListenToVision()
-
-	connect.ClientTest()
 
 	select {}
 }

@@ -76,6 +76,7 @@ func ListenToVision() {
 
 type roboIMEAtlas struct {
 	currentFrame *ssl.SSL_WrapperPacket // TODO: make this a buffer
+
 }
 
 func (r *roboIMEAtlas) GetFrame(timestamp *ssl.Timestamp, stream ssl.RoboIMEAtlas_GetFrameServer) error {
@@ -112,43 +113,65 @@ func StartRoboIMEAtlasServer(atlas *roboIMEAtlas) {
 	if err := httpServer.ListenAndServeTLS(crt, key); err != nil {
 		logger.Fatalf("failed starting http2 server: %v", err)
 	}
-	// if err := httpServer.ListenAndServe(); err != nil {
-	// 	logger.Fatalf("failed starting http2 server: %v", err)
-	// }
 }
 
-func ClientTest() {
-	creds, err := credentials.NewClientTLSFromFile(crt, "")
-	if err != nil {
-		panic(err)
-	}
-
-	addr := fmt.Sprintf("%s:%d", *ServiceAddress, *ServicePort)
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(creds), grpc.WithTimeout(time.Minute))
-	if err != nil {
-		panic(err)
-	}
-	defer conn.Close()
-
-	client := ssl.NewRoboIMEAtlasClient(conn)
-
-	log.Println("Client test started")
-	for {
-		time.Sleep(17 * time.Millisecond)
-		stream, err := client.GetFrame(context.Background(), &ssl.Timestamp{})
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-		for {
-			pkt, err := stream.Recv()
+func ClientTest(nOfClients, interval, duration int) {
+	tick := time.Tick(time.Duration(interval+(interval/nOfClients)) * time.Millisecond)
+	quit := make(chan bool)
+	for i := 0; i < nOfClients; i++ {
+		go func(i int) {
+			creds, err := credentials.NewClientTLSFromFile(crt, "")
 			if err != nil {
-				break
+				panic(err)
 			}
 
-			log.Println(pkt)
-		}
+			addr := fmt.Sprintf("%s:%d", *ServiceAddress, *ServicePort)
+			conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(creds), grpc.WithBlock(), grpc.WithTimeout(time.Minute))
+			if err != nil {
+				panic(err)
+			}
+			defer conn.Close()
+
+			client := ssl.NewRoboIMEAtlasClient(conn)
+
+			log.Println("Client test started")
+			for {
+				time.Sleep(time.Duration(interval) * time.Millisecond)
+				stream, err := client.GetFrame(context.Background(), &ssl.Timestamp{})
+				if err != nil {
+					// log.Println(err)
+					continue
+				}
+				for {
+					_, err := stream.Recv()
+					if err != nil {
+						// log.Println(err)
+						break
+					}
+
+					// log.Println("goroutine", i)
+				}
+
+				select {
+				case <-quit:
+					return
+				default:
+				}
+			}
+		}(i)
+
+		<-tick
 	}
+
+	after := time.After(time.Duration(duration) * time.Second)
+	<-after
+
+	for i := 0; i < nOfClients; i++ {
+		quit <- true
+	}
+	log.Println("test ended")
+
+	os.Exit(0)
 }
 
 func allowCORS(h http.Handler) http.Handler {
