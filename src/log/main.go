@@ -81,18 +81,14 @@ func buildLocalServers() ([]*server, error) {
 }
 
 func main() {
-	reader, err := persistence.NewReader("logfile.log.gz")
+	servers, err := buildLocalServers()
 	if err != nil {
 		panic(err)
 	}
-	defer reader.Close()
 
-	addr := &net.UDPAddr{
-		IP:   net.ParseIP("127.0.0.1"),
-		Port: 10020,
+	for _, server := range servers {
+		go serveLogPackages(server.reader, server.addr)
 	}
-
-	go serveLogPackages(reader, addr)
 
 	select {}
 }
