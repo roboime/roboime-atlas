@@ -27,6 +27,7 @@ const (
 	key = "../local.key"
 )
 
+// Flags
 var (
 	VisionAddress  *string
 	VisionPort     *int
@@ -41,6 +42,7 @@ func init() {
 	ServicePort = flag.Int("serviceport", 9090, "")
 }
 
+// ListenToVision starts listening to vision and start the GRPC server
 func ListenToVision() {
 	flag.Parse()
 
@@ -54,6 +56,8 @@ func ListenToVision() {
 		panic(err)
 	}
 
+	log.Printf("Connected vision on %v:%v", *VisionAddress, *VisionPort)
+
 	var buf [2048]byte
 	pkt := &ssl.SSL_WrapperPacket{}
 	atlas := &roboIMEAtlas{
@@ -61,6 +65,7 @@ func ListenToVision() {
 	}
 	log.Println("Server started!")
 	go StartRoboIMEAtlasServer(atlas)
+
 	for {
 		size, _, err := conn.ReadFromUDP(buf[:])
 		if err != nil {
@@ -74,6 +79,7 @@ func ListenToVision() {
 
 		detection := pkt.GetDetection()
 		if detection != nil {
+			log.Println("read package ", *detection)
 			atlas.cameraFrame[*detection.CameraId] = pkt
 			continue
 		}
