@@ -14,35 +14,41 @@ const (
 	interval = 5
 )
 
-func serveLogPackages(reader *persistence.Reader, addr *net.UDPAddr) {
+func serveLogPackages(reader *persistence.Reader, addr *net.UDPAddr, refbox *net.UDPAddr) {
 	conn, err := net.DialUDP("udp", nil, addr)
-
 	if err != nil {
 		panic(err)
 	}
 
-	log.Printf("starting broadcast at %v:%v", addr.IP, addr.Port)
+	refConn, err := net.DialUDP("udp", nil, refbox)
+	if err != nil {
+		panic(err)
+	}
+
+	log.Printf("starting vision at %v:%v", addr.IP, addr.Port)
+	log.Printf("starting refbox at %v:%v", refbox.IP, refbox.Port)
 	for {
 		msg, err := reader.ReadMessage()
 		if err != nil {
 			panic(err)
 		}
+
 		if msg.MessageType.Id == persistence.MessageSslVision2014 {
-			_, err := msg.ParseVisionWrapper()
-			if err != nil {
-				panic(err)
-			}
-
-			_, err = conn.Write(msg.Message)
-
-			time.Sleep(time.Millisecond * interval)
+			conn.Write(msg.Message)
 		}
+
+		if msg.MessageType.Id == persistence.MessageSslRefbox2013 {
+			refConn.Write(msg.Message)
+		}
+
+		time.Sleep(time.Millisecond * interval)
 	}
 }
 
 type server struct {
 	reader *persistence.Reader
 	addr   *net.UDPAddr
+	refbox *net.UDPAddr
 }
 
 func buildLocalServers() ([]*server, error) {
@@ -69,6 +75,10 @@ func buildLocalServers() ([]*server, error) {
 					IP:   net.ParseIP("127.0.0.1"),
 					Port: initialPort,
 				},
+				refbox: &net.UDPAddr{
+					IP:   net.ParseIP("127.0.0.1"),
+					Port: initialPort + 1,
+				},
 				reader: reader,
 			}
 
@@ -88,7 +98,7 @@ func main() {
 	}
 
 	for _, server := range servers {
-		go serveLogPackages(server.reader, server.addr)
+		go serveLogPackages(server.reader, server.addr, server.refbox)
 	}
 
 	select {}
