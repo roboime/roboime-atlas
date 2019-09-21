@@ -5,7 +5,8 @@ import (
 )
 
 func main() {
-	go connect.ListenToVision()
+	atlas := connect.NewRoboIMEAtlas()
+	go atlas.ListenToVision()
 
 	select {}
 }
