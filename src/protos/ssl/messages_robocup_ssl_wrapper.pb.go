@@ -24,43 +24,160 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-type Timestamp struct {
-	UnixTimestamp        int32    `protobuf:"varint,1,opt,name=unix_timestamp,json=unixTimestamp,proto3" json:"unix_timestamp,omitempty"`
+type FrameRequest struct {
+	MatchId              int32    `protobuf:"varint,1,opt,name=match_id,json=matchId,proto3" json:"match_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *Timestamp) Reset()         { *m = Timestamp{} }
-func (m *Timestamp) String() string { return proto.CompactTextString(m) }
-func (*Timestamp) ProtoMessage()    {}
-func (*Timestamp) Descriptor() ([]byte, []int) {
+func (m *FrameRequest) Reset()         { *m = FrameRequest{} }
+func (m *FrameRequest) String() string { return proto.CompactTextString(m) }
+func (*FrameRequest) ProtoMessage()    {}
+func (*FrameRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_bf05487903c52d35, []int{0}
 }
 
-func (m *Timestamp) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Timestamp.Unmarshal(m, b)
+func (m *FrameRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_FrameRequest.Unmarshal(m, b)
 }
-func (m *Timestamp) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Timestamp.Marshal(b, m, deterministic)
+func (m *FrameRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_FrameRequest.Marshal(b, m, deterministic)
 }
-func (m *Timestamp) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Timestamp.Merge(m, src)
+func (m *FrameRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FrameRequest.Merge(m, src)
 }
-func (m *Timestamp) XXX_Size() int {
-	return xxx_messageInfo_Timestamp.Size(m)
+func (m *FrameRequest) XXX_Size() int {
+	return xxx_messageInfo_FrameRequest.Size(m)
 }
-func (m *Timestamp) XXX_DiscardUnknown() {
-	xxx_messageInfo_Timestamp.DiscardUnknown(m)
+func (m *FrameRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_FrameRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_Timestamp proto.InternalMessageInfo
+var xxx_messageInfo_FrameRequest proto.InternalMessageInfo
 
-func (m *Timestamp) GetUnixTimestamp() int32 {
+func (m *FrameRequest) GetMatchId() int32 {
 	if m != nil {
-		return m.UnixTimestamp
+		return m.MatchId
 	}
 	return 0
+}
+
+type ActiveMatchesRequest struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ActiveMatchesRequest) Reset()         { *m = ActiveMatchesRequest{} }
+func (m *ActiveMatchesRequest) String() string { return proto.CompactTextString(m) }
+func (*ActiveMatchesRequest) ProtoMessage()    {}
+func (*ActiveMatchesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bf05487903c52d35, []int{1}
+}
+
+func (m *ActiveMatchesRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ActiveMatchesRequest.Unmarshal(m, b)
+}
+func (m *ActiveMatchesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ActiveMatchesRequest.Marshal(b, m, deterministic)
+}
+func (m *ActiveMatchesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ActiveMatchesRequest.Merge(m, src)
+}
+func (m *ActiveMatchesRequest) XXX_Size() int {
+	return xxx_messageInfo_ActiveMatchesRequest.Size(m)
+}
+func (m *ActiveMatchesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ActiveMatchesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ActiveMatchesRequest proto.InternalMessageInfo
+
+type MatchesPacket struct {
+	Match                []*MatchData `protobuf:"bytes,1,rep,name=match,proto3" json:"match,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
+}
+
+func (m *MatchesPacket) Reset()         { *m = MatchesPacket{} }
+func (m *MatchesPacket) String() string { return proto.CompactTextString(m) }
+func (*MatchesPacket) ProtoMessage()    {}
+func (*MatchesPacket) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bf05487903c52d35, []int{2}
+}
+
+func (m *MatchesPacket) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_MatchesPacket.Unmarshal(m, b)
+}
+func (m *MatchesPacket) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_MatchesPacket.Marshal(b, m, deterministic)
+}
+func (m *MatchesPacket) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MatchesPacket.Merge(m, src)
+}
+func (m *MatchesPacket) XXX_Size() int {
+	return xxx_messageInfo_MatchesPacket.Size(m)
+}
+func (m *MatchesPacket) XXX_DiscardUnknown() {
+	xxx_messageInfo_MatchesPacket.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MatchesPacket proto.InternalMessageInfo
+
+func (m *MatchesPacket) GetMatch() []*MatchData {
+	if m != nil {
+		return m.Match
+	}
+	return nil
+}
+
+type MatchData struct {
+	MatchId              int32    `protobuf:"varint,1,opt,name=match_id,json=matchId,proto3" json:"match_id,omitempty"`
+	MatchName            string   `protobuf:"bytes,2,opt,name=match_name,json=matchName,proto3" json:"match_name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *MatchData) Reset()         { *m = MatchData{} }
+func (m *MatchData) String() string { return proto.CompactTextString(m) }
+func (*MatchData) ProtoMessage()    {}
+func (*MatchData) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bf05487903c52d35, []int{3}
+}
+
+func (m *MatchData) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_MatchData.Unmarshal(m, b)
+}
+func (m *MatchData) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_MatchData.Marshal(b, m, deterministic)
+}
+func (m *MatchData) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MatchData.Merge(m, src)
+}
+func (m *MatchData) XXX_Size() int {
+	return xxx_messageInfo_MatchData.Size(m)
+}
+func (m *MatchData) XXX_DiscardUnknown() {
+	xxx_messageInfo_MatchData.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MatchData proto.InternalMessageInfo
+
+func (m *MatchData) GetMatchId() int32 {
+	if m != nil {
+		return m.MatchId
+	}
+	return 0
+}
+
+func (m *MatchData) GetMatchName() string {
+	if m != nil {
+		return m.MatchName
+	}
+	return ""
 }
 
 type SSL_WrapperPacket struct {
@@ -75,7 +192,7 @@ func (m *SSL_WrapperPacket) Reset()         { *m = SSL_WrapperPacket{} }
 func (m *SSL_WrapperPacket) String() string { return proto.CompactTextString(m) }
 func (*SSL_WrapperPacket) ProtoMessage()    {}
 func (*SSL_WrapperPacket) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bf05487903c52d35, []int{1}
+	return fileDescriptor_bf05487903c52d35, []int{4}
 }
 
 func (m *SSL_WrapperPacket) XXX_Unmarshal(b []byte) error {
@@ -111,29 +228,38 @@ func (m *SSL_WrapperPacket) GetGeometry() *SSL_GeometryData {
 }
 
 func init() {
-	proto.RegisterType((*Timestamp)(nil), "Timestamp")
+	proto.RegisterType((*FrameRequest)(nil), "FrameRequest")
+	proto.RegisterType((*ActiveMatchesRequest)(nil), "ActiveMatchesRequest")
+	proto.RegisterType((*MatchesPacket)(nil), "MatchesPacket")
+	proto.RegisterType((*MatchData)(nil), "MatchData")
 	proto.RegisterType((*SSL_WrapperPacket)(nil), "SSL_WrapperPacket")
 }
 
 func init() { proto.RegisterFile("messages_robocup_ssl_wrapper.proto", fileDescriptor_bf05487903c52d35) }
 
 var fileDescriptor_bf05487903c52d35 = []byte{
-	// 238 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x6c, 0x8f, 0x4f, 0x4b, 0xc3, 0x40,
-	0x10, 0x47, 0x8d, 0x52, 0x69, 0xc7, 0x3f, 0xd0, 0xf5, 0x52, 0x7a, 0x92, 0xa8, 0xe0, 0xc5, 0x45,
-	0xe3, 0x5d, 0x50, 0xaa, 0x45, 0x50, 0x90, 0x54, 0x10, 0xbc, 0x2c, 0x9b, 0x38, 0x94, 0x60, 0xb6,
-	0xb3, 0xec, 0x4c, 0x50, 0xbf, 0xbd, 0x74, 0xdb, 0xc4, 0x83, 0xbd, 0x3e, 0xde, 0x6f, 0x78, 0x03,
-	0xa9, 0x43, 0x66, 0x3b, 0x47, 0x36, 0x81, 0x0a, 0x2a, 0x1b, 0x6f, 0x98, 0x6b, 0xf3, 0x15, 0xac,
-	0xf7, 0x18, 0xb4, 0x0f, 0x24, 0x34, 0x3e, 0xdd, 0xe8, 0x7c, 0xa0, 0x60, 0x29, 0x15, 0x2d, 0xd6,
-	0xd6, 0xc9, 0x46, 0x6b, 0x8e, 0xe4, 0x50, 0xc2, 0xcf, 0x4a, 0x4a, 0x33, 0x18, 0xbc, 0x56, 0x0e,
-	0x59, 0xac, 0xf3, 0xea, 0x0c, 0x0e, 0x9b, 0x45, 0xf5, 0x6d, 0xa4, 0x25, 0xa3, 0xe4, 0x38, 0x39,
-	0xef, 0xe5, 0x07, 0x4b, 0xda, 0x69, 0x69, 0x03, 0xc3, 0xd9, 0xec, 0xc9, 0xbc, 0xad, 0x9a, 0x5e,
-	0x6c, 0xf9, 0x89, 0xa2, 0xae, 0x60, 0xd0, 0x05, 0xc4, 0xd9, 0x5e, 0x76, 0xa4, 0x97, 0xda, 0xa4,
-	0xa5, 0x0f, 0xc1, 0x3a, 0xcc, 0xff, 0x2c, 0x75, 0x01, 0xfd, 0xb6, 0x66, 0xb4, 0x1d, 0x17, 0xc3,
-	0xb8, 0x98, 0xae, 0xe1, 0xc4, 0x8a, 0xcd, 0x3b, 0x25, 0xbb, 0x81, 0xfd, 0x9c, 0x0a, 0x7a, 0x7c,
-	0xbe, 0xbf, 0x95, 0xda, 0xb2, 0xd2, 0xd0, 0x9f, 0xa2, 0xc4, 0xab, 0x0a, 0x74, 0x97, 0x37, 0x56,
-	0xfa, 0x5f, 0x5d, 0xba, 0x75, 0x99, 0xdc, 0xf5, 0xde, 0x77, 0x98, 0xeb, 0x62, 0x37, 0x3e, 0x7e,
-	0xfd, 0x1b, 0x00, 0x00, 0xff, 0xff, 0x54, 0x54, 0xfc, 0x2d, 0x69, 0x01, 0x00, 0x00,
+	// 327 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x91, 0xcd, 0x4f, 0xf2, 0x40,
+	0x10, 0x87, 0xe9, 0x4b, 0x78, 0xa5, 0x03, 0x18, 0x59, 0x3f, 0x82, 0x24, 0x26, 0xcd, 0xea, 0x01,
+	0x0f, 0x6e, 0xa4, 0x1e, 0x3d, 0x61, 0x40, 0x42, 0x22, 0xc6, 0x94, 0x83, 0x89, 0x97, 0x66, 0x29,
+	0x13, 0x24, 0x52, 0xb6, 0xee, 0x0e, 0x1a, 0x2f, 0xfe, 0xed, 0x86, 0x6d, 0x41, 0x89, 0x8d, 0xc7,
+	0xfe, 0xe6, 0x99, 0x8f, 0x3e, 0x0b, 0x3c, 0x46, 0x63, 0xe4, 0x14, 0x4d, 0xa8, 0xd5, 0x58, 0x45,
+	0xcb, 0x24, 0x34, 0x66, 0x1e, 0xbe, 0x6b, 0x99, 0x24, 0xa8, 0x45, 0xa2, 0x15, 0xa9, 0xe6, 0x59,
+	0x2e, 0x33, 0x41, 0xc2, 0x88, 0x66, 0x6a, 0x91, 0x51, 0xa7, 0xb9, 0xd4, 0x14, 0x55, 0x8c, 0xa4,
+	0x3f, 0x52, 0x88, 0x9f, 0x43, 0xf5, 0x56, 0xcb, 0x18, 0x03, 0x7c, 0x5d, 0xa2, 0x21, 0x76, 0x0c,
+	0xe5, 0x58, 0x52, 0xf4, 0x1c, 0xce, 0x26, 0x0d, 0xc7, 0x73, 0x5a, 0xa5, 0x60, 0xc7, 0x7e, 0x0f,
+	0x26, 0xfc, 0x08, 0x0e, 0x3a, 0x11, 0xcd, 0xde, 0x70, 0xb8, 0x0a, 0xd0, 0x64, 0x2d, 0xbc, 0x0d,
+	0xb5, 0x2c, 0x79, 0x90, 0xd1, 0x0b, 0x12, 0xf3, 0xa0, 0x64, 0x7b, 0x1a, 0x8e, 0x57, 0x6c, 0x55,
+	0x7c, 0x10, 0xb6, 0xdc, 0x95, 0x24, 0x83, 0xb4, 0xc0, 0x7b, 0xe0, 0x6e, 0xb2, 0x3f, 0x56, 0xb2,
+	0x13, 0x80, 0xb4, 0xb4, 0x90, 0x31, 0x36, 0xfe, 0x79, 0x4e, 0xcb, 0x0d, 0x5c, 0x9b, 0xdc, 0xcb,
+	0x18, 0xf9, 0x12, 0xea, 0xa3, 0xd1, 0x5d, 0xf8, 0x98, 0xca, 0xc9, 0xb6, 0xb7, 0xc1, 0xdd, 0x98,
+	0xb0, 0xf3, 0x2a, 0xfe, 0xbe, 0x58, 0x61, 0xdd, 0x75, 0x9a, 0xfe, 0xf0, 0x37, 0xc5, 0x2e, 0xa0,
+	0xbc, 0xd6, 0x62, 0x97, 0x54, 0xfc, 0xba, 0xed, 0xe8, 0x67, 0xa1, 0x3d, 0x7d, 0x83, 0xf8, 0x9f,
+	0x50, 0x0d, 0xd4, 0x58, 0x0d, 0x86, 0xbd, 0x0e, 0xcd, 0xa5, 0x61, 0x6d, 0x28, 0xf7, 0x91, 0xec,
+	0x54, 0x56, 0x13, 0x3f, 0x75, 0x36, 0x99, 0xf8, 0x75, 0x20, 0x2f, 0x5c, 0x3a, 0xec, 0x1a, 0xf6,
+	0xfa, 0x48, 0x5b, 0x3a, 0xd9, 0xa1, 0xc8, 0xd3, 0xdb, 0xdc, 0x15, 0x5b, 0x76, 0x79, 0xe1, 0xa6,
+	0xf4, 0x54, 0x34, 0x66, 0x3e, 0xfe, 0x6f, 0x5f, 0xf0, 0xea, 0x2b, 0x00, 0x00, 0xff, 0xff, 0x65,
+	0x9d, 0x5a, 0x09, 0x32, 0x02, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -148,7 +274,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type RoboIMEAtlasClient interface {
-	GetFrame(ctx context.Context, in *Timestamp, opts ...grpc.CallOption) (RoboIMEAtlas_GetFrameClient, error)
+	GetFrame(ctx context.Context, in *FrameRequest, opts ...grpc.CallOption) (RoboIMEAtlas_GetFrameClient, error)
+	GetActiveMatches(ctx context.Context, in *ActiveMatchesRequest, opts ...grpc.CallOption) (*MatchesPacket, error)
 }
 
 type roboIMEAtlasClient struct {
@@ -159,7 +286,7 @@ func NewRoboIMEAtlasClient(cc *grpc.ClientConn) RoboIMEAtlasClient {
 	return &roboIMEAtlasClient{cc}
 }
 
-func (c *roboIMEAtlasClient) GetFrame(ctx context.Context, in *Timestamp, opts ...grpc.CallOption) (RoboIMEAtlas_GetFrameClient, error) {
+func (c *roboIMEAtlasClient) GetFrame(ctx context.Context, in *FrameRequest, opts ...grpc.CallOption) (RoboIMEAtlas_GetFrameClient, error) {
 	stream, err := c.cc.NewStream(ctx, &_RoboIMEAtlas_serviceDesc.Streams[0], "/RoboIMEAtlas/GetFrame", opts...)
 	if err != nil {
 		return nil, err
@@ -191,17 +318,30 @@ func (x *roboIMEAtlasGetFrameClient) Recv() (*SSL_WrapperPacket, error) {
 	return m, nil
 }
 
+func (c *roboIMEAtlasClient) GetActiveMatches(ctx context.Context, in *ActiveMatchesRequest, opts ...grpc.CallOption) (*MatchesPacket, error) {
+	out := new(MatchesPacket)
+	err := c.cc.Invoke(ctx, "/RoboIMEAtlas/GetActiveMatches", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RoboIMEAtlasServer is the server API for RoboIMEAtlas service.
 type RoboIMEAtlasServer interface {
-	GetFrame(*Timestamp, RoboIMEAtlas_GetFrameServer) error
+	GetFrame(*FrameRequest, RoboIMEAtlas_GetFrameServer) error
+	GetActiveMatches(context.Context, *ActiveMatchesRequest) (*MatchesPacket, error)
 }
 
 // UnimplementedRoboIMEAtlasServer can be embedded to have forward compatible implementations.
 type UnimplementedRoboIMEAtlasServer struct {
 }
 
-func (*UnimplementedRoboIMEAtlasServer) GetFrame(req *Timestamp, srv RoboIMEAtlas_GetFrameServer) error {
+func (*UnimplementedRoboIMEAtlasServer) GetFrame(req *FrameRequest, srv RoboIMEAtlas_GetFrameServer) error {
 	return status.Errorf(codes.Unimplemented, "method GetFrame not implemented")
+}
+func (*UnimplementedRoboIMEAtlasServer) GetActiveMatches(ctx context.Context, req *ActiveMatchesRequest) (*MatchesPacket, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetActiveMatches not implemented")
 }
 
 func RegisterRoboIMEAtlasServer(s *grpc.Server, srv RoboIMEAtlasServer) {
@@ -209,7 +349,7 @@ func RegisterRoboIMEAtlasServer(s *grpc.Server, srv RoboIMEAtlasServer) {
 }
 
 func _RoboIMEAtlas_GetFrame_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(Timestamp)
+	m := new(FrameRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
@@ -229,10 +369,33 @@ func (x *roboIMEAtlasGetFrameServer) Send(m *SSL_WrapperPacket) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _RoboIMEAtlas_GetActiveMatches_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ActiveMatchesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoboIMEAtlasServer).GetActiveMatches(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/RoboIMEAtlas/GetActiveMatches",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoboIMEAtlasServer).GetActiveMatches(ctx, req.(*ActiveMatchesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _RoboIMEAtlas_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "RoboIMEAtlas",
 	HandlerType: (*RoboIMEAtlasServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetActiveMatches",
+			Handler:    _RoboIMEAtlas_GetActiveMatches_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "GetFrame",

@@ -4,11 +4,24 @@ import "messages_robocup_ssl_geometry.proto";
 option go_package = "ssl";
 
 service RoboIMEAtlas{
-  rpc GetFrame(Timestamp) returns (stream SSL_WrapperPacket){}
+  rpc GetFrame(FrameRequest) returns (stream SSL_WrapperPacket){}
+  rpc GetActiveMatches(ActiveMatchesRequest) returns (MatchesPacket){}
 }
 
-message Timestamp {
-  int32 unix_timestamp = 1;
+message FrameRequest {
+  int32 match_id = 1;
+}
+
+message ActiveMatchesRequest {
+}
+
+message MatchesPacket {
+	repeated MatchData match = 1;
+}
+
+message MatchData {
+	int32 match_id = 1;
+	string match_name = 2;
 }
 
 message SSL_WrapperPacket {

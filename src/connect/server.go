@@ -30,74 +30,107 @@ const (
 // Flags
 var (
 	VisionAddress  *string
-	VisionPort     *int
+	VisionPort1    *int
+	VisionPort2    *int
 	ServiceAddress *string
 	ServicePort    *int
 )
 
 func init() {
 	VisionAddress = flag.String("visionaddr", "224.5.23.2", "")
-	VisionPort = flag.Int("visionport", 10020, "")
+	VisionPort1 = flag.Int("visionport1", 10020, "")
+	VisionPort2 = flag.Int("visionport2", 10025, "")
 	ServiceAddress = flag.String("serviceaddr", "127.0.0.1", "")
 	ServicePort = flag.Int("serviceport", 9090, "")
+}
+
+func buildConnections() ([]*net.UDPConn, error) {
+	addr1 := net.UDPAddr{
+		Port: *VisionPort1,
+		IP:   net.ParseIP(*VisionAddress),
+	}
+	addr2 := net.UDPAddr{
+		Port: *VisionPort2,
+		IP:   net.ParseIP(*VisionAddress),
+	}
+
+	conn1, err := net.ListenUDP("udp", &addr1)
+	if err != nil {
+		return nil, err
+	}
+
+	conn2, err := net.ListenUDP("udp", &addr2)
+	if err != nil {
+		return nil, err
+	}
+
+	return []*net.UDPConn{conn1, conn2}, nil
 }
 
 // ListenToVision starts listening to vision and start the GRPC server
 func ListenToVision() {
 	flag.Parse()
 
-	addr := net.UDPAddr{
-		Port: *VisionPort,
-		IP:   net.ParseIP(*VisionAddress),
-	}
-
-	conn, err := net.ListenUDP("udp", &addr)
+	conns, err := buildConnections()
 	if err != nil {
 		panic(err)
 	}
 
-	log.Printf("Connected vision on %v:%v", *VisionAddress, *VisionPort)
+	initialFrames := map[int][]*ssl.SSL_WrapperPacket{}
+
+	for i := range conns {
+		initialFrames[i] = make([]*ssl.SSL_WrapperPacket, 8)
+	}
 
 	var buf [2048]byte
 	pkt := &ssl.SSL_WrapperPacket{}
 	atlas := &roboIMEAtlas{
-		cameraFrame: make([]*ssl.SSL_WrapperPacket, 8),
+		cameraFrame:  initialFrames,
+		lastGeometry: map[int]*ssl.SSL_WrapperPacket{},
 	}
 	log.Println("Server started!")
 	go StartRoboIMEAtlasServer(atlas)
 
 	for {
-		size, _, err := conn.ReadFromUDP(buf[:])
-		if err != nil {
-			panic(err)
-		}
 
-		if err := proto.Unmarshal(buf[:size], pkt); err != nil {
-			log.Println(err)
-			continue
-		}
+		for i, conn := range conns {
+			size, _, err := conn.ReadFromUDP(buf[:])
+			if err != nil {
+				panic(err)
+			}
 
-		detection := pkt.GetDetection()
-		if detection != nil {
-			log.Println("read package ", *detection)
-			atlas.cameraFrame[*detection.CameraId] = pkt
-			continue
-		}
+			if err := proto.Unmarshal(buf[:size], pkt); err != nil {
+				log.Println(err)
+				continue
+			}
 
-		geometry := pkt.GetGeometry()
-		if geometry != nil {
-			atlas.lastGeometry = pkt
+			detection := pkt.GetDetection()
+			if detection != nil {
+				fmt.Println("reading package from", conn.LocalAddr().String())
+				atlas.cameraFrame[i][*detection.CameraId] = pkt
+				continue
+			}
+
+			geometry := pkt.GetGeometry()
+			if geometry != nil {
+				atlas.lastGeometry[i] = pkt
+			}
 		}
 	}
 }
 
 type roboIMEAtlas struct {
-	cameraFrame  []*ssl.SSL_WrapperPacket
-	lastGeometry *ssl.SSL_WrapperPacket
+	cameraFrame  map[int][]*ssl.SSL_WrapperPacket
+	lastGeometry map[int]*ssl.SSL_WrapperPacket
 }
 
-func (r *roboIMEAtlas) GetFrame(timestamp *ssl.Timestamp, stream ssl.RoboIMEAtlas_GetFrameServer) error {
-	for _, frame := range r.cameraFrame {
+func (r *roboIMEAtlas) GetFrame(req *ssl.FrameRequest, stream ssl.RoboIMEAtlas_GetFrameServer) error {
+	if req == nil {
+		log.Fatalln("FATAL: empty request for GetFrame")
+		return nil
+	}
+
+	for _, frame := range r.cameraFrame[int(req.MatchId)] {
 		if frame != nil {
 			err := stream.Send(frame)
 			if err != nil {
@@ -109,6 +142,21 @@ func (r *roboIMEAtlas) GetFrame(timestamp *ssl.Timestamp, stream ssl.RoboIMEAtla
 	return nil
 }
 
+func (r *roboIMEAtlas) GetActiveMatches(ctx context.Context, req *ssl.ActiveMatchesRequest) (*ssl.MatchesPacket, error) {
+	matches := []*ssl.MatchData{}
+
+	for i := range r.cameraFrame {
+		matches = append(matches, &ssl.MatchData{
+			MatchId: int32(i),
+		})
+	}
+
+	return &ssl.MatchesPacket{
+		Match: matches,
+	}, nil
+}
+
+// StartRoboIMEAtlasServer starts the grpc RoboIMEAtlas server
 func StartRoboIMEAtlasServer(atlas *roboIMEAtlas) {
 	grpcServer := grpc.NewServer()
 	ssl.RegisterRoboIMEAtlasServer(grpcServer, atlas)
@@ -134,6 +182,7 @@ func StartRoboIMEAtlasServer(atlas *roboIMEAtlas) {
 	}
 }
 
+// ClientTest simulates clients
 func ClientTest(nOfClients, interval, duration int) {
 	tick := time.Tick(time.Duration(interval+(interval/nOfClients)) * time.Millisecond)
 	quit := make(chan bool)
@@ -156,7 +205,9 @@ func ClientTest(nOfClients, interval, duration int) {
 			log.Println("Client test started")
 			for {
 				time.Sleep(time.Duration(interval) * time.Millisecond)
-				stream, err := client.GetFrame(context.Background(), &ssl.Timestamp{})
+				stream, err := client.GetFrame(context.Background(), &ssl.FrameRequest{
+					MatchId: 0,
+				})
 				if err != nil {
 					// log.Println(err)
 					continue
