@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
+	"log"
 	"net"
 	"regexp"
 	"time"
@@ -20,6 +20,8 @@ func serveLogPackages(reader *persistence.Reader, addr *net.UDPAddr) {
 	if err != nil {
 		panic(err)
 	}
+
+	log.Printf("starting broadcast at %v:%v", addr.IP, addr.Port)
 	for {
 		msg, err := reader.ReadMessage()
 		if err != nil {
@@ -56,7 +58,6 @@ func buildLocalServers() ([]*server, error) {
 	reg := regexp.MustCompile(`(.)+\.log\.gz`)
 	for _, file := range files {
 		if reg.MatchString(file.Name()) {
-			fmt.Println(file.Name())
 
 			reader, err := persistence.NewReader(file.Name())
 			if err != nil {
