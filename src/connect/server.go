@@ -23,8 +23,8 @@ import (
 )
 
 const (
-	crt = "../local.crt"
-	key = "../local.key"
+	crt = "../localhost.crt"
+	key = "../localhost.key"
 )
 
 // Flags

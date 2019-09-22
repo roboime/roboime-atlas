@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"io/ioutil"
 	"log"
 	"net"
@@ -30,7 +31,11 @@ func serveLogPackages(reader *persistence.Reader, addr *net.UDPAddr, refbox *net
 	for {
 		msg, err := reader.ReadMessage()
 		if err != nil {
-			panic(err)
+			if err == io.EOF {
+				log.Println("End of log!")
+			} else {
+				panic(err)
+			}
 		}
 
 		if msg.MessageType.Id == persistence.MessageSslVision2014 {
