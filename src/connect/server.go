@@ -50,62 +50,92 @@ func init() {
 	ServicePort = flag.Int("serviceport", 9090, "")
 }
 
-func buildConnections() ([]*net.UDPConn, error) {
-	addr1 := net.UDPAddr{
+type matchConn struct {
+	vision *net.UDPConn
+	refbox *net.UDPConn
+}
+
+func buildAddresses() ([]net.UDPAddr, []net.UDPAddr) {
+	vision1 := net.UDPAddr{
 		Port: *VisionPort1,
 		IP:   net.ParseIP(*VisionAddress),
 	}
-	addr2 := net.UDPAddr{
+	vision2 := net.UDPAddr{
 		Port: *VisionPort2,
 		IP:   net.ParseIP(*VisionAddress),
 	}
 
-	conn1, err := net.ListenUDP("udp", &addr1)
-	if err != nil {
-		return nil, err
+	refbox1 := net.UDPAddr{
+		Port: *RefboxPort1,
+		IP:   net.ParseIP(*RefboxAddress),
+	}
+	refbox2 := net.UDPAddr{
+		Port: *RefboxPort2,
+		IP:   net.ParseIP(*RefboxAddress),
 	}
 
-	conn2, err := net.ListenUDP("udp", &addr2)
-	if err != nil {
-		return nil, err
+	return []net.UDPAddr{vision1, vision2}, []net.UDPAddr{refbox1, refbox2}
+}
+
+func buildConnections() ([]*matchConn, error) {
+	visionAddrs, refboxAddrs := buildAddresses()
+
+	conns := []*matchConn{}
+
+	for i, visionAddr := range visionAddrs {
+		vision, err := net.ListenUDP("udp", &visionAddr)
+		if err != nil {
+			return nil, err
+		}
+
+		refbox, err := net.ListenUDP("udp", &refboxAddrs[i])
+		if err != nil {
+			return nil, err
+		}
+
+		conns = append(conns, &matchConn{
+			vision: vision,
+			refbox: refbox,
+		})
 	}
 
-	return []*net.UDPConn{conn1, conn2}, nil
+	return conns, nil
 }
 
 // NewRoboIMEAtlas creates a new instance of RoboIMEAtlas
-func NewRoboIMEAtlas() *RoboIMEAtlas {
+func NewRoboIMEAtlas() (*RoboIMEAtlas, error) {
 	flag.Parse()
+	conns, err := buildConnections()
+	if err != nil {
+		return nil, err
+	}
 
 	return &RoboIMEAtlas{
 		lastGeometry: map[int]*ssl.SSL_WrapperPacket{},
 		cameraFrame:  map[int][]*ssl.SSL_WrapperPacket{},
-	}
+		refbox:       map[int]*ssl.SSL_Referee{},
+		conns:        conns,
+	}, nil
 }
 
 // ListenToVision starts listening to vision and start the GRPC server
 func (atlas *RoboIMEAtlas) ListenToVision() {
-	conns, err := buildConnections()
-	if err != nil {
-		panic(err)
-	}
 
 	initialFrames := map[int][]*ssl.SSL_WrapperPacket{}
-	for i := range conns {
+	for i := range atlas.conns {
 		initialFrames[i] = make([]*ssl.SSL_WrapperPacket, 8)
 	}
 
 	atlas.cameraFrame = initialFrames
 
 	var buf [2048]byte
-	pkt := &ssl.SSL_WrapperPacket{}
-	log.Println("Server started!")
-	go atlas.StartRoboIMEAtlasServer()
+	log.Println("vision server started!")
 
 	for {
 
-		for i, conn := range conns {
-			size, _, err := conn.ReadFromUDP(buf[:])
+		pkt := &ssl.SSL_WrapperPacket{}
+		for i, conn := range atlas.conns {
+			size, _, err := conn.vision.ReadFromUDP(buf[:])
 			if err != nil {
 				panic(err)
 			}
@@ -117,6 +147,7 @@ func (atlas *RoboIMEAtlas) ListenToVision() {
 
 			detection := pkt.GetDetection()
 			if detection != nil {
+				fmt.Println("reading detection")
 				atlas.cameraFrame[i][*detection.CameraId] = pkt
 				continue
 			}
@@ -129,12 +160,40 @@ func (atlas *RoboIMEAtlas) ListenToVision() {
 	}
 }
 
+// ListenToRefbox starts listening to the refbox info
+func (atlas *RoboIMEAtlas) ListenToRefbox() {
+
+	var buf [2048]byte
+	log.Println("vision server started!")
+
+	for {
+
+		pkt := &ssl.SSL_Referee{}
+		for i, conn := range atlas.conns {
+			size, _, err := conn.refbox.ReadFromUDP(buf[:])
+			if err != nil {
+				panic(err)
+			}
+
+			if err := proto.Unmarshal(buf[:size], pkt); err != nil {
+				log.Println(err)
+				continue
+			}
+
+			atlas.refbox[i] = pkt
+			fmt.Println(*pkt)
+		}
+	}
+}
+
 // RoboIMEAtlas defines the RoboIMEAtlas struct
 type RoboIMEAtlas struct {
 	cameraFrame  map[int][]*ssl.SSL_WrapperPacket
 	lastGeometry map[int]*ssl.SSL_WrapperPacket
 
 	refbox map[int]*ssl.SSL_Referee
+
+	conns []*matchConn
 }
 
 // GetFrame retrieves a stream of detection frame given a match
@@ -161,9 +220,17 @@ func (atlas *RoboIMEAtlas) GetActiveMatches(ctx context.Context, req *ssl.Active
 	matches := []*ssl.MatchData{}
 
 	for i := range atlas.cameraFrame {
-		matches = append(matches, &ssl.MatchData{
+		data := &ssl.MatchData{
 			MatchId: int32(i),
-		})
+		}
+
+		matchRef, ok := atlas.refbox[i]
+		if ok {
+			data.MatchName = fmt.Sprintf("%v x %v", *matchRef.Yellow.Name, *matchRef.Blue.Name)
+		}
+
+		log.Println("GetActiveMatches:", data)
+		matches = append(matches, data)
 	}
 
 	return &ssl.MatchesPacket{

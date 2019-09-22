@@ -5,8 +5,13 @@ import (
 )
 
 func main() {
-	atlas := connect.NewRoboIMEAtlas()
+	atlas, err := connect.NewRoboIMEAtlas()
+	if err != nil {
+		panic(err)
+	}
+	go atlas.StartRoboIMEAtlasServer()
 	go atlas.ListenToVision()
+	go atlas.ListenToRefbox()
 
 	select {}
 }
