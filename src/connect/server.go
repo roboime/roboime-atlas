@@ -147,7 +147,6 @@ func (atlas *RoboIMEAtlas) ListenToVision() {
 
 			detection := pkt.GetDetection()
 			if detection != nil {
-				fmt.Println("reading detection")
 				atlas.cameraFrame[i][*detection.CameraId] = pkt
 				continue
 			}
@@ -181,7 +180,6 @@ func (atlas *RoboIMEAtlas) ListenToRefbox() {
 			}
 
 			atlas.refbox[i] = pkt
-			fmt.Println(*pkt)
 		}
 	}
 }
@@ -213,6 +211,17 @@ func (atlas *RoboIMEAtlas) GetFrame(req *ssl.FrameRequest, stream ssl.RoboIMEAtl
 	}
 
 	return nil
+}
+
+// GetMatchInfo retrieves referee data from a specific match
+func (atlas *RoboIMEAtlas) GetMatchInfo(ctx context.Context, req *ssl.MatchInfoRequest) (*ssl.SSL_Referee, error) {
+	matchID := req.MatchId
+	ref, ok := atlas.refbox[int(matchID)]
+	if !ok {
+		return nil, fmt.Errorf("invalid match id")
+	}
+
+	return ref, nil
 }
 
 // GetActiveMatches returns info about the active matches being gathered

@@ -1,11 +1,13 @@
 syntax = "proto3";
 import "messages_robocup_ssl_detection.proto";
 import "messages_robocup_ssl_geometry.proto";
+import "referee.proto";
 option go_package = "ssl";
 
 service RoboIMEAtlas{
   rpc GetFrame(FrameRequest) returns (stream SSL_WrapperPacket){}
   rpc GetActiveMatches(ActiveMatchesRequest) returns (MatchesPacket){}
+  rpc GetMatchInfo(MatchInfoRequest) returns (SSL_Referee){}
 }
 
 message FrameRequest {
@@ -13,6 +15,10 @@ message FrameRequest {
 }
 
 message ActiveMatchesRequest {
+}
+
+message MatchInfoRequest {
+	int32 match_id = 1;
 }
 
 message MatchesPacket {
