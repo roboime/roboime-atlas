@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"google.golang.org/grpc/credentials"
@@ -115,6 +116,7 @@ func NewRoboIMEAtlas() (*RoboIMEAtlas, error) {
 		cameraFrame:  map[int][]*ssl.SSL_WrapperPacket{},
 		refbox:       map[int]*ssl.SSL_Referee{},
 		conns:        conns,
+		mux:          &sync.Mutex{},
 	}, nil
 }
 
@@ -179,7 +181,9 @@ func (atlas *RoboIMEAtlas) ListenToRefbox() {
 				continue
 			}
 
+			atlas.mux.Lock()
 			atlas.refbox[i] = pkt
+			atlas.mux.Unlock()
 		}
 	}
 }
@@ -192,6 +196,8 @@ type RoboIMEAtlas struct {
 	refbox map[int]*ssl.SSL_Referee
 
 	conns []*matchConn
+
+	mux *sync.Mutex
 }
 
 // GetFrame retrieves a stream of detection frame given a match
@@ -216,7 +222,9 @@ func (atlas *RoboIMEAtlas) GetFrame(req *ssl.FrameRequest, stream ssl.RoboIMEAtl
 // GetMatchInfo retrieves referee data from a specific match
 func (atlas *RoboIMEAtlas) GetMatchInfo(ctx context.Context, req *ssl.MatchInfoRequest) (*ssl.SSL_Referee, error) {
 	matchID := req.MatchId
+	atlas.mux.Lock()
 	ref, ok := atlas.refbox[int(matchID)]
+	atlas.mux.Unlock()
 	if !ok {
 		return nil, fmt.Errorf("invalid match id")
 	}
@@ -228,13 +236,15 @@ func (atlas *RoboIMEAtlas) GetMatchInfo(ctx context.Context, req *ssl.MatchInfoR
 func (atlas *RoboIMEAtlas) GetActiveMatches(ctx context.Context, req *ssl.ActiveMatchesRequest) (*ssl.MatchesPacket, error) {
 	matches := []*ssl.MatchData{}
 
-	for i := range atlas.cameraFrame {
+	atlas.mux.Lock()
+	refboxMap := atlas.refbox
+	atlas.mux.Unlock()
+	for i, matchRef := range refboxMap {
 		data := &ssl.MatchData{
 			MatchId: int32(i),
 		}
 
-		matchRef, ok := atlas.refbox[i]
-		if ok {
+		if matchRef.Yellow != nil && matchRef.Blue != nil {
 			data.MatchName = fmt.Sprintf("%v x %v", *matchRef.Yellow.Name, *matchRef.Blue.Name)
 		}
 
