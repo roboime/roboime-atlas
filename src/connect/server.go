@@ -133,9 +133,9 @@ func (atlas *RoboIMEAtlas) ListenToVision() {
 	var buf [2048]byte
 	log.Println("vision server started!")
 
+	pkt := &ssl.SSL_WrapperPacket{}
 	for {
 
-		pkt := &ssl.SSL_WrapperPacket{}
 		for i, conn := range atlas.conns {
 			size, _, err := conn.vision.ReadFromUDP(buf[:])
 			if err != nil {
@@ -149,14 +149,20 @@ func (atlas *RoboIMEAtlas) ListenToVision() {
 
 			detection := pkt.GetDetection()
 			if detection != nil {
-				atlas.cameraFrame[i][*detection.CameraId] = pkt
+				atlas.cameraFrame[i][*detection.CameraId] = &ssl.SSL_WrapperPacket{
+					Detection: detection,
+				}
 				continue
 			}
 
 			geometry := pkt.GetGeometry()
 			if geometry != nil {
-				atlas.lastGeometry[i] = pkt
+				atlas.lastGeometry[i] = &ssl.SSL_WrapperPacket{
+					Geometry: geometry,
+				}
 			}
+
+			time.Sleep(3 * time.Millisecond)
 		}
 	}
 }
@@ -185,6 +191,8 @@ func (atlas *RoboIMEAtlas) ListenToRefbox() {
 			atlas.refbox[i] = pkt
 			atlas.mux.Unlock()
 		}
+
+		time.Sleep(7 * time.Millisecond)
 	}
 }
 
@@ -232,6 +240,22 @@ func (atlas *RoboIMEAtlas) GetMatchInfo(ctx context.Context, req *ssl.MatchInfoR
 	return ref, nil
 }
 
+// GetGeometry returns the match's geometry
+func (atlas *RoboIMEAtlas) GetGeometry(ctx context.Context, req *ssl.FrameRequest) (*ssl.SSL_GeometryData, error) {
+	matchID := req.MatchId
+
+	pkt, ok := atlas.lastGeometry[int(matchID)]
+	if !ok {
+		return nil, fmt.Errorf("invalid match id")
+	}
+
+	if pkt == nil {
+		return nil, nil
+	}
+
+	return pkt.GetGeometry(), nil
+}
+
 // GetActiveMatches returns info about the active matches being gathered
 func (atlas *RoboIMEAtlas) GetActiveMatches(ctx context.Context, req *ssl.ActiveMatchesRequest) (*ssl.MatchesPacket, error) {
 	matches := []*ssl.MatchData{}
@@ -248,7 +272,6 @@ func (atlas *RoboIMEAtlas) GetActiveMatches(ctx context.Context, req *ssl.Active
 			data.MatchName = fmt.Sprintf("%v x %v", *matchRef.Yellow.Name, *matchRef.Blue.Name)
 		}
 
-		log.Println("GetActiveMatches:", data)
 		matches = append(matches, data)
 	}
 

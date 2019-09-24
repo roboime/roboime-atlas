@@ -6,6 +6,7 @@ option go_package = "ssl";
 
 service RoboIMEAtlas{
   rpc GetFrame(FrameRequest) returns (stream SSL_WrapperPacket){}
+  rpc GetGeometry(FrameRequest) returns (SSL_GeometryData){}
   rpc GetActiveMatches(ActiveMatchesRequest) returns (MatchesPacket){}
   rpc GetMatchInfo(MatchInfoRequest) returns (SSL_Referee){}
 }
