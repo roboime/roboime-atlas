@@ -175,8 +175,8 @@ func (atlas *RoboIMEAtlas) ListenToRefbox() {
 
 	for {
 
-		pkt := &ssl.SSL_Referee{}
 		for i, conn := range atlas.conns {
+			pkt := &ssl.SSL_Referee{}
 			size, _, err := conn.refbox.ReadFromUDP(buf[:])
 			if err != nil {
 				panic(err)
@@ -186,7 +186,6 @@ func (atlas *RoboIMEAtlas) ListenToRefbox() {
 				log.Println(err)
 				continue
 			}
-
 			atlas.mux.Lock()
 			atlas.refbox[i] = pkt
 			atlas.mux.Unlock()
@@ -233,6 +232,7 @@ func (atlas *RoboIMEAtlas) GetMatchInfo(ctx context.Context, req *ssl.MatchInfoR
 	atlas.mux.Lock()
 	ref, ok := atlas.refbox[int(matchID)]
 	atlas.mux.Unlock()
+
 	if !ok {
 		return nil, fmt.Errorf("invalid match id")
 	}
@@ -248,6 +248,8 @@ func (atlas *RoboIMEAtlas) GetGeometry(ctx context.Context, req *ssl.FrameReques
 	if !ok {
 		return nil, fmt.Errorf("invalid match id")
 	}
+
+	//	fmt.Println("GetGeometry request for ", req.MatchId)
 
 	if pkt == nil {
 		return nil, nil
