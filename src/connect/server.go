@@ -121,7 +121,7 @@ func NewRoboIMEAtlas() (*RoboIMEAtlas, error) {
 }
 
 // ListenToVision starts listening to vision and start the GRPC server
-func (atlas *RoboIMEAtlas) ListenToVision() {
+func (atlas *RoboIMEAtlas) ListenToVision(updateInterval time.Duration) {
 
 	initialFrames := map[int][]*ssl.SSL_WrapperPacket{}
 	for i := range atlas.conns {
@@ -162,13 +162,13 @@ func (atlas *RoboIMEAtlas) ListenToVision() {
 				}
 			}
 
-			time.Sleep(3 * time.Millisecond)
+			time.Sleep(updateInterval * time.Millisecond)
 		}
 	}
 }
 
 // ListenToRefbox starts listening to the refbox info
-func (atlas *RoboIMEAtlas) ListenToRefbox() {
+func (atlas *RoboIMEAtlas) ListenToRefbox(updateInterval time.Duration) {
 
 	var buf [2048]byte
 	log.Println("vision server started!")
@@ -191,7 +191,7 @@ func (atlas *RoboIMEAtlas) ListenToRefbox() {
 			atlas.mux.Unlock()
 		}
 
-		time.Sleep(7 * time.Millisecond)
+		time.Sleep(updateInterval * time.Millisecond)
 	}
 }
 
